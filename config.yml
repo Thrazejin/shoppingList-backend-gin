@@ -1,0 +1,21 @@
+QADatabase:
+  user: postgres
+  password: postgres
+  dbname: learning-gin-test
+  port: 5432
+    
+DEVDdatabase:
+  user: postgres
+  password: postgres
+  dbname: learning-gin
+  port: 5432
+
+server:
+  environment: QA
+  host: 127.0.0.1
+  port: 8080
+  timeout:
+    server: 30
+    read: 15
+    write: 10
+    idle: 5
