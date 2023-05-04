@@ -123,7 +123,7 @@ func GetUnities(context *gin.Context) {
 	}
 
 	// Return the a array of UnitOutput representation of the unities
-	context.JSON(http.StatusOK, model.ParseArrayOutput(unities))
+	context.JSON(http.StatusOK, model.ParseUnitArrayOutput(unities))
 }
 
 // -------------------------

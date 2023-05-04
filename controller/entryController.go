@@ -23,7 +23,7 @@ func AddEntry(context *gin.Context) {
 		return
 	}
 
-	input.UserID = user.ID
+	input.AppUserID = user.ID
 
 	savedEntry, err := input.Save()
 

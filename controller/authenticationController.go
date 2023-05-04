@@ -8,36 +8,36 @@ import (
 	"shoppingList-backend-gin.com/m/model"
 )
 
-type AuthenticationInput struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 func Register(context *gin.Context) {
-	var input AuthenticationInput
+	var input model.UserInput
 
 	if err := context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user := model.User{
-		Username: input.Username,
-		Password: input.Password,
-	}
-
-	savedUser, err := user.Save()
-
-	if err != nil {
+	// Validates if it already exists
+	if _, err := input.FindIfDoesntExist(); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	context.JSON(http.StatusCreated, savedUser)
+	user := model.AppUser{
+		Name:     input.Name,
+		Username: input.Username,
+		Password: input.Password,
+	}
+
+	if err := user.Save(); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	context.JSON(http.StatusCreated, user)
 }
 
 func Login(context *gin.Context) {
-	var input AuthenticationInput
+	var input model.AuthenticationInput
 
 	if err := context.ShouldBindJSON(&input); err != nil {
 
