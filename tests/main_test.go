@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"shoppingList-backend-gin.com/m/config"
 	"shoppingList-backend-gin.com/m/controller"
 	"shoppingList-backend-gin.com/m/middleware"
 	"shoppingList-backend-gin.com/m/model"
@@ -27,6 +28,13 @@ func router() *gin.Engine {
 	protectedRoutes.POST("/entry", controller.AddEntry)
 	protectedRoutes.GET("/entry", controller.GetAllEntries)
 
+	protectedRoutes.POST("/unit", controller.CreateUnit)
+	protectedRoutes.GET("/unit", controller.GetUnities)
+	protectedRoutes.GET("/unit/:id", controller.GetUnitById)
+	protectedRoutes.PUT("/unit/:id", controller.UpdateUnit)
+	protectedRoutes.PATCH("/unit/:id", controller.UpdateUnit)
+	protectedRoutes.DELETE("/unit/:id", controller.DeleteUnitById)
+
 	return router
 }
 
@@ -39,16 +47,24 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func setup() {
-	model.ConnectDatabase()
-	model.DB.AutoMigrate(&model.User{})
-	model.DB.AutoMigrate(&model.Entry{})
+func setup() error {
+	if err := config.ReadConfig("QA"); err != nil {
+		return err
+	}
+
+	if err := model.ConnectDatabase(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func teardown() {
 	migrator := model.DB.Migrator()
-	migrator.DropTable(&model.User{})
+
+	migrator.DropTable(&model.AppUser{})
 	migrator.DropTable(&model.Entry{})
+	migrator.DropTable(&model.Unit{})
 }
 
 func makeRequest(method, url string, body interface{}, isAuthenticatedRequest bool) *httptest.ResponseRecorder {
@@ -63,8 +79,8 @@ func makeRequest(method, url string, body interface{}, isAuthenticatedRequest bo
 }
 
 func bearerToken() string {
-	user := controller.AuthenticationInput{
-		Username: "yemiwebby",
+	user := model.AuthenticationInput{
+		Username: "thraze",
 		Password: "test",
 	}
 

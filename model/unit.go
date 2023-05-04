@@ -10,13 +10,13 @@ import (
 /// Unit functions
 /// --------------
 
-func GetUnitById(user User, unit *Unit, id int) error {
+func GetUnitById(user AppUser, unit *Unit, id int) error {
 
 	if err := DB.Where("id = ?", id).First(unit).Error; err != nil {
 		return err
 	}
 
-	if unit.UserID != user.ID {
+	if unit.AppUserID != user.ID {
 		return errors.New("This Unit does not belong to you")
 	}
 
@@ -28,10 +28,10 @@ func (unit *Unit) ParseOutput() *UnitOutput {
 	return &UnitOutput{ID: unit.ID, Name: unit.Name, ShortName: unit.ShortName}
 }
 
-func FindAllUnities(user User) ([]Unit, error) {
+func FindAllUnities(user AppUser) ([]Unit, error) {
 	var unities []Unit
 
-	if err := DB.Where("userID = ?", user.ID).Find(&unities).Error; err != nil {
+	if err := DB.Where("app_user_id = ?", user.ID).Find(&unities).Error; err != nil {
 		return make([]Unit, 0), err
 	}
 
@@ -46,7 +46,7 @@ func MapForOutput(array []Unit, f func(Unit) UnitOutput) []UnitOutput {
 	return vsm
 }
 
-func ParseArrayOutput(array []Unit) []UnitOutput {
+func ParseUnitArrayOutput(array []Unit) []UnitOutput {
 	return MapForOutput(array,
 		func(u Unit) UnitOutput {
 			return *u.ParseOutput()
@@ -61,21 +61,21 @@ func (unit *Unit) Delete() error {
 /// UnitInput functions
 /// -------------------
 
-func (input *UnitInput) FindIfDoesntExist(user User) (Unit, error) {
+func (input *UnitInput) FindIfDoesntExist(user AppUser) (Unit, error) {
 	var unit Unit
 
-	if result := DB.Where("name = ? and userId = ?", input.Name, user.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if result := DB.Where("name = ? and app_user_id = ?", input.Name, user.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return unit, errors.New("Unit 'name' already exists")
 	}
 
-	if result := DB.Where("shortName = ? and userId = ?", input.ShortName, user.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if result := DB.Where("short_name = ? and app_user_id = ?", input.ShortName, user.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return unit, errors.New("Unit 'shortName' already exists")
 	}
 
 	return Unit{}, nil
 }
 
-func (input *UnitInput) Save(user User) (*Unit, error) {
+func (input *UnitInput) Save(user AppUser) (*Unit, error) {
 	unit := input.Parse(user)
 
 	if err := DB.Create(unit).Error; err != nil {
@@ -85,8 +85,8 @@ func (input *UnitInput) Save(user User) (*Unit, error) {
 	return unit, nil
 }
 
-func (input *UnitInput) Parse(user User) *Unit {
-	unit := Unit{User: user, UserID: user.ID, Name: input.Name, ShortName: input.ShortName}
+func (input *UnitInput) Parse(user AppUser) *Unit {
+	unit := Unit{User: user, AppUserID: user.ID, Name: input.Name, ShortName: input.ShortName}
 
 	return &unit
 }
@@ -95,15 +95,15 @@ func (input *UnitInput) Parse(user User) *Unit {
 /// UnitUpdateInput functions
 /// -------------------------
 
-func (input *UnitUpdateInput) FindIfDoesntExist(user User, unitIn Unit) (Unit, error) {
+func (input *UnitUpdateInput) FindIfDoesntExist(user AppUser, unitIn Unit) (Unit, error) {
 	var unit Unit
 
-	if result := DB.Where("name = ? and userID = ? and ID <> ?", input.Name, user.ID, unitIn.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if result := DB.Where("name = ? and app_user_id = ? and ID <> ?", input.Name, user.ID, unitIn.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return unit, errors.New("Unit 'name' already exists")
 	}
 
-	if result := DB.Where("shortName = ? and userID = ? and ID <> ?", input.ShortName, user.ID, unitIn.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return unit, errors.New("Unit 'shortName' already exists")
+	if result := DB.Where("short_name = ? and app_user_id = ? and ID <> ?", input.ShortName, user.ID, unitIn.ID).First(&unit); !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return unit, errors.New("Unit 'shortname' already exists")
 	}
 
 	return Unit{}, nil
@@ -131,8 +131,8 @@ type Unit struct {
 	gorm.Model
 	Name      string `gorm:"size:100;not null;unique"`
 	ShortName string `gorm:"size:10;not null;unique"`
-	UserID    uint
-	User      User `gorm:"not null;foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	AppUserID uint
+	User      AppUser `gorm:"not null;foreignKey:AppUserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type UnitInput struct {

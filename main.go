@@ -41,7 +41,7 @@ func Engine() *gin.Engine {
 
 func main() {
 
-	if err := config.ReadConfig(); err != nil {
+	if err := config.ReadConfig("DEV"); err != nil {
 		return
 	}
 

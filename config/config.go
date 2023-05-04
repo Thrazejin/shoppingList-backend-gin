@@ -8,40 +8,52 @@ import (
 
 // Configurations exported
 type Configurations struct {
-	Server      ServerConfigurations
-	QADatabase  QADatabaseConfigurations
-	DEVDatabase DEVDatabaseConfigurations
+	Server       ServerConfigurations
+	QADatabase   QADatabaseConfigurations
+	DEVDatabase  DEVDatabaseConfigurations
+	PRODdatabase PRODdatabaseConfigurations
 }
 
 // ServerConfigurations exported
 type ServerConfigurations struct {
+	Environment string
+	Host        string
 	Port        int
-	environment string
-	host        string
-	port        int
 }
 
 // DatabaseConfigurations exported
 type QADatabaseConfigurations struct {
-	user     string
-	password string
-	dbname   string
-	port     int
+	User     string
+	Password string
+	DBname   string
+	Port     int
 }
 
 // DatabaseConfigurations exported
 type DEVDatabaseConfigurations struct {
-	user     string
-	password string
-	dbname   string
-	port     int
+	User     string
+	Password string
+	DBname   string
+	Port     int
+}
+
+// DatabaseConfigurations exported
+type PRODdatabaseConfigurations struct {
+	User     string
+	Password string
+	DBname   string
+	Port     int
 }
 
 var configuration Configurations
 
-func ReadConfig() error {
+func ReadConfig(environment string) error {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
+	if environment == "QA" {
+		viper.AddConfigPath("..")
+	} else {
+		viper.AddConfigPath(".")
+	}
 	viper.AutomaticEnv()
 	viper.SetConfigType("yml")
 
@@ -49,6 +61,8 @@ func ReadConfig() error {
 		fmt.Printf("Error reading config file, %s", err)
 		return err
 	}
+
+	viper.Set("server.environment", environment)
 
 	err := viper.Unmarshal(&configuration)
 	if err != nil {
@@ -61,8 +75,4 @@ func ReadConfig() error {
 
 func GetConfiguration() Configurations {
 	return configuration
-}
-
-func (serverConfig ServerConfigurations) GetEnvironment() string {
-	return serverConfig.environment
 }
